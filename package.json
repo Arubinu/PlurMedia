@@ -1,0 +1,26 @@
+{
+  "name": "PlurMedia",
+  "version": "1.0.0",
+  "description": "Media Manager with Stream and Local Playback",
+  "homepage": "https://github.com/Arubinu/PlurMedia#readme",
+  "main": "index.js",
+  "scripts": {
+    "start": "node $npm_package_main",
+    "debug": "DEBUG=* node $npm_package_main",
+    "dev": "nw src/",
+    "prod": "nwbuild --platforms win32,win64,osx64,linux32,linux64 --buildDir dist/ src/"
+  },
+  "author": "Alvin Pergens",
+  "license": "ISC",
+  "devDependencies": {
+    "nw": "^0.28.3",
+    "nw-builder": "^3.5.1"
+  },
+  "dependencies": {
+    "express": "^4.16.2",
+    "socket.io": "^2.0.4",
+    "sqlite-sync": "^0.3.6",
+    "tmp": "0.0.33",
+    "unzip": "^0.1.11"
+  }
+}
