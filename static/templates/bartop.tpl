@@ -2,9 +2,9 @@
 {{# if ( eq type 'infos' ) }}
 	{{ infos.name }}
 {{ else }}
-	<div class="sort">Tous</div>
-	<div class="sort">Films</div>
-	<div class="sort">Par Titre</div>
+	<div class="sort">{{ trans 'bartop.all' }}</div>
+	<div class="sort">{{ trans 'bartop.movies' }}</div>
+	<div class="sort">{{ trans 'bartop.title' }}</div>
 	<span class="badge badge-secondary">{{ size }}</span>
 </div>
 {{/ if }}

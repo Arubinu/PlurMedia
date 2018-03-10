@@ -4,20 +4,32 @@ $( function() {
 	// Variables
 	var begin = false;
 	var socket = false;
+	var language = ( cookie( 'lang' ) || 'en' );
 	var templates = {};
 	var emit_prev = false;
 	var emit_callback = [];
 	var bartop_callback = false;
 
 	var back = $( '.navbar .fa-angle-left' );
+	var search = $( '#search' );
 	var bartop = $( '#bartop' );
 	var medias = $( '#medias' );
 	var player = $( '#player' );
-	var search = $( '#search input' );
 
-	// Templates
-	$.each( [ 'bartop', 'medias', 'player' ], ( index, item ) => {
-		$.get( 'templates/' + item + '.tpl', function( tpl ) { templates[ item ] = Handlebars.compile( tpl ); } );
+	// Loading and Templates
+	var langs = {};
+	$.get( 'langs.json', 'json' ).done( ( data ) => {
+		langs = data;
+
+		var auto = { search: search };
+		$.each( [ 'search', 'bartop', 'medias', 'player' ], ( index, item ) => {
+			$.get( 'templates/' + item + '.tpl', ( tpl ) => {
+				templates[ item ] = Handlebars.compile( tpl );
+
+				if ( item in auto )
+					auto[ item ].html( templates[ item ]() );
+			} );
+		} );
 	} );
 
 	// Functions
@@ -221,23 +233,24 @@ $( function() {
 		} );
 
 	var timeout_search = 0;
-	search.keyup( function() {
-		var elem = $( this );
-		var text = elem.val();
-		var visible = !!text.length;
+	search.find( 'input' )
+		.keyup( function() {
+			var elem = $( this );
+			var text = elem.val();
+			var visible = !!text.length;
 
-		if ( timeout_search )
-			clearTimeout( timeout_search );
+			if ( timeout_search )
+				clearTimeout( timeout_search );
 
-		timeout_search = setTimeout( () => {
-			timeout_search = 0;
-			elem.parent().find( '.fa-times' ).toggle( visible );
-			emit( 'medias', { category: false, search: text } );
-		}, 250 );
-	} );
-	search.parent().find( '.fa-times' ).click( function() {
-		$( this ).hide().parent().find( 'input' ).val( '' );
-	} );
+			timeout_search = setTimeout( () => {
+				timeout_search = 0;
+				elem.parent().find( '.fa-times' ).toggle( visible );
+				emit( 'medias', { category: false, search: text } );
+			}, 250 );
+		} )
+		.parent().find( '.fa-times' ).click( function() {
+			$( this ).hide().parent().find( 'input' ).val( '' );
+		} );
 
 	$( '#dropdown' ).on( 'change', function( event ) {
 		var selected = event.target.selectedOptions[ 0 ].value;
@@ -311,6 +324,11 @@ $( function() {
 
 		return ( arguments[ 0 ] + '/' + path );
 		//return ( btoa( arguments[ 0 ] + '/' + path ) );
+	} );
+
+	Handlebars.registerHelper( 'trans', function( name, block ) {
+		var lang = ( block.hash.lang ? block.hash.lang : language );
+		return ( ( ( lang in langs ) && name in langs[ lang ] ) ? langs[ lang ][ name ] : '' );
 	} );
 
 	// Socket

@@ -9,7 +9,8 @@
 @white_normal: #fff;
 @white_light: rgba( 255, 255, 255, .7 );
 
-@bartop_size: 50px;
+@navbar_size: 57px;
+@bartop_size: 42px;
 
 @-webkit-keyframes indicator {
 	40% {
@@ -188,6 +189,7 @@ input[type=range] {
 
 /* Navbar */
 .navbar {
+	height: @navbar_size;
 	color: rgba( 255, 255, 255, .5 );
 	font-size: 25px;
 	z-index: 3;
@@ -266,7 +268,7 @@ input[type=range] {
 /* Page */
 #container {
 	position: fixed;
-	top: @bartop_size;
+	top: @navbar_size;
 	bottom: 0px;
 	left: 0px;
 	right: 0px;
@@ -299,7 +301,7 @@ input[type=range] {
 	> .float-right > *:not(.badge) {
 		display: inline-block;
 		vertical-align: middle;
-		line-height: calc( @bartop_size + 2px );
+		line-height: calc( @bartop_size - 4px );
 	}
 	.separator {
 		margin: 0px 2px;

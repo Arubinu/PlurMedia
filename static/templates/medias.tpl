@@ -37,19 +37,19 @@
 					<tbody>
 						{{# if infos.directed_by }}
 						<tr>
-							<th>Dirigé par</th>
+							<th>{{ trans 'infos.directed_by' }}</th>
 							<td>{{ infos.directed_by }}</td>
 						</tr>
 						{{/ if }}
 						{{# if infos.written_by }}
 						<tr>
-							<th>Écrit par</th>
+							<th>{{ trans 'infos.written_by' }}</th>
 							<td>{{ infos.written_by }}</td>
 						</tr>
 						{{/ if }}
 						{{# if infos.studio }}
 						<tr>
-							<th>Studio</th>
+							<th>{{ trans 'infos.studio' }}</th>
 							<td>{{ infos.studio }}</td>
 						</tr>
 						{{/ if }}
@@ -58,7 +58,7 @@
 				<div class="space-top">{{ infos.description }}</div>
 				{{# if infos.actors }}
 				<div class="actors">
-					<h5>Acteurs</h5>
+					<h5>{{ trans 'infos.actors' }}</h5>
 					<div class="list">
 						{{# each infos.actors as |actor| }}
 						<div>

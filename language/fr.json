@@ -1,0 +1,12 @@
+{
+	"search.placeholder":	"Titre, Genre, Description ...",
+
+	"bartop.all":			"Tous",
+	"bartop.movies":		"Films",
+	"bartop.title":			"Par Titre",
+
+	"infos.directed_by":	"Dirigé par",
+	"infos.written_by":		"Écrit par",
+	"infos.studio":			"Studio",
+	"infos.actors":			"Acteurs"
+}
