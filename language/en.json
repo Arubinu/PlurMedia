@@ -1,9 +1,9 @@
 {
 	"search.placeholder":	"Title, Kind, Description ...",
 
-	"bartop.all": "All",
-	"bartop.movies": "Movies",
-	"bartop.title": "By Title",
+	"bartop.all":			"All",
+	"bartop.movies":		"Movies",
+	"bartop.title":			"By Title",
 
 	"infos.directed_by":	"Directed by",
 	"infos.written_by":		"Written by",

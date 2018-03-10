@@ -6,8 +6,8 @@
 	<div class="sort">{{ trans 'bartop.movies' }}</div>
 	<div class="sort">{{ trans 'bartop.title' }}</div>
 	<span class="badge badge-secondary">{{ size }}</span>
-</div>
 {{/ if }}
+</div>
 <div class="float-right">
 {{# if ( eq type 'infos' ) }}
 	<i class="fas fa-play hover"></i>
