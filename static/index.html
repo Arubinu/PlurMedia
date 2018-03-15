@@ -16,7 +16,7 @@
 		<script type="text/javascript" src="js/jquery-3.3.1.min.js"></script>
 		<script type="text/javascript" src="js/jquery-ui.min.js"></script>
 		<script type="text/javascript" src="js/jquery.cookie.js"></script>
-		<script type="text/javascript" src="js/bootstrap.min.js"></script>
+		<script type="text/javascript" src="js/bootstrap.bundle.min.js"></script>
 		<script type="text/javascript" src="js/socket.io.js"></script>
 		<script type="text/javascript" src="js/less.min.js"></script>
 		<script type="text/javascript" src="js/main.js"></script>
@@ -24,26 +24,14 @@
 
 	<body>
 		<div class="background"><div></div></div>
-		<nav class="navbar navbar-dark bg-dark justify-content-between">
-			<div class="float-left">
-				<i class="fas fa-angle-left" style="display: none;"></i>
-				<i class="fas fa-home"></i>
-				<a class="navbar-brand" href="#">PlurMedia</a> <span>v 0.0.1</span>
-			</div>
-			<div>
-				<div id="search"></div>
-				<i class="fas fa-search" style="display: none;"></i>
-				<i class="fas fa-times" style="display: none;"></i>
-				<i class="fas fa-cog"></i>
-			</div>
-		</nav>
-
 		<div id="server-status" style="display: none;">
 			<div>
 				<i class="fas fa-exclamation-triangle"></i>
 				<br />Le serveur est injoignable !
 			</div>
 		</div>
+
+		<div id="header"></div>
 		<div id="container">
 			<div id="bartop"></div>
 			<div id="medias"></div>

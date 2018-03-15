@@ -41,6 +41,20 @@ body {
 	background-color: #3f4245;
 }
 
+.caret {
+	content: '';
+	display: inline-block;
+	width: 0;
+	height: 0;
+	margin-left: .255em;
+	font-size: 20px;
+	vertical-align: .155em;
+	border-top: .3em solid;
+	border-right: .25em solid transparent;
+	border-bottom: 0;
+	border-left: .25em solid transparent;
+}
+
 /* Range */
 input[type=range] {
 	@line: 2px;
@@ -197,7 +211,7 @@ input[type=range] {
 	&.bg-dark {
 		background-color: @black_light !important;
 	}
-	div {
+	div:not(.dropdown-menu) {
 		display: inline-block;
 	}
 	input[type=text] {
@@ -218,7 +232,39 @@ input[type=range] {
 	i:hover, svg:hover {
 		color: @white_light;
 	}
+	.langs {
+		img {
+			margin-top: -4px;
+			height: 23px;
+		}
+		.dropdown-toggle {
+			margin-left: 15px;
+			padding: 0px;
+		}
+		.dropdown-toggle::after {
+			.caret;
+			margin-right: -10px;
+			vertical-align: .255em;
+			color: rgba( 255, 255, 255, .5 );
+		}
+		.dropdown-menu {
+			top: calc( 100% + 5px );
+			min-width: initial;
+			border-top-left-radius: 0px;
+			border-top-right-radius: 0px;
+
+			&, .dropdown-item:hover {
+				background-color: rgba( 0, 0, 0, .4 );
+			}
+		}
+	}
 	> .float-left {
+		> span {
+			font-size: 14px;
+		}
+		> .navbar-brand {
+			margin-right: 0px;
+		}
 		i, svg {
 			margin-left: 0px;
 			margin-right: 10px;
@@ -318,17 +364,7 @@ input[type=range] {
 	}
 	.grid::after,
 	.sort::after {
-		content: '';
-		display: inline-block;
-		width: 0;
-		height: 0;
-		margin-left: .255em;
-		font-size: 20px;
-		vertical-align: .155em;
-		border-top: .3em solid;
-		border-right: .25em solid transparent;
-		border-bottom: 0;
-		border-left: .25em solid transparent;
+		.caret;
 	}
 	.sort {
 		margin-right: 15px;

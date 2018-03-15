@@ -11,251 +11,31 @@ $( function() {
 	var bartop_callback = false;
 
 	var back = $( '.navbar .fa-angle-left' );
-	var search = $( '#search' );
-	var bartop = $( '#bartop' );
-	var medias = $( '#medias' );
-	var player = $( '#player' );
+	var header = search = bartop = medias = player = false;
 
 	// Loading and Templates
 	var langs = {};
 	$.get( 'langs.json', 'json' ).done( ( data ) => {
 		langs = data;
 
-		var auto = { search: search };
-		$.each( [ 'search', 'bartop', 'medias', 'player' ], ( index, item ) => {
+		vars();
+		var auto = {
+			header: [ header,	{ title: 'PlurMedia', version: '0.0.1', lang: language, langs: Object.keys( langs ) } ]
+		};
+
+		$.each( [ 'header', 'bartop', 'medias', 'player' ], ( index, item ) => {
+			vars();
 			$.get( 'templates/' + item + '.tpl', ( tpl ) => {
 				templates[ item ] = Handlebars.compile( tpl );
 
 				if ( item in auto )
-					auto[ item ].html( templates[ item ]() );
+					auto[ item ][ 0 ].html( templates[ item ]( auto[ item ][ 1 ] || {} ) );
 			} );
 		} );
+
+		init();
+		emit( 'medias', { category: false, search: '' } );
 	} );
-
-	// Functions
-	function cookie( key, value )
-	{
-		if ( typeof( value ) !== 'undefined' )
-			$.cookie( key, value, { expires: 365, path: '/' } );
-
-		return ( $.cookie( key ) );
-	}
-
-	function status( connected, check )
-	{
-		if ( check && begin != connected )
-			return ;
-		else if ( !begin && connected )
-			emit( 'medias', { category: false, search: '' } );
-
-		begin = ( begin || connected );
-		$( '#server-status' )[ connected ? 'fadeOut' : 'fadeIn' ]();
-	}
-
-	function emit( key, value, passed )
-	{
-		socket.emit( key, value );
-		if ( !passed )
-		{
-			var tmp = emit_callback.slice( -1 );
-			if ( !tmp || JSON.stringify( [ key, value ] ) != JSON.stringify( tmp[ 0 ] ) )
-				emit_callback.push( [ key, value ] );
-		}
-
-		emit_prev = false;
-		back.toggle( emit_callback.length >= 2 );
-	}
-
-	function prev()
-	{
-		if ( emit_callback.length >= ( emit_prev ? 1 : 2 ) )
-		{
-			if ( !emit_prev )
-				emit_callback.pop();
-
-			var tmp = emit_callback.pop();
-			if ( !emit_callback.length )
-				emit_callback.push( tmp );
-
-			emit( ...tmp, true );
-		}
-
-		emit_prev = true;
-		back.toggle( emit_callback.length >= 2 );
-	}
-
-	function empty()
-	{
-		medias.html( $( '<div>' ).addClass( 'empty text-center' ).text( 'Aucun média trouvé ...' ) );
-	}
-
-	function bartop_refresh( data )
-	{
-		var zoom = medias.attr( 'data-zoom' );
-		if ( !zoom )
-			zoom = cookie( 'zoom' );
-
-		bartop.html( templates[ 'bartop' ]( data ) ).find( '.zoom' ).val( zoom || 2 ).trigger( 'change' );
-	}
-
-	function play( data )
-	{
-		var video = $( '<video>' ).attr( 'volume', 1 ).appendTo( player );
-		var video0 = video.get( 0 );
-
-		player.find( '.tpl' ).html( templates[ 'player' ]( data ) );
-		var top = $( '.top', player );
-		var bottom = $( '.bottom', player );
-
-		top.off( 'click', '.fa-exchange-alt' ).on( 'click', '.fa-exchange-alt', function( event, force ) {
-			if ( !force && ( window.screenTop || window.screenY ) )
-			{
-				if ( player.get( 0 ).mozRequestFullScreen )
-					player.get( 0 ).mozRequestFullScreen();
-				else if ( player.get( 0 ).webkitRequestFullScreen )
-					player.get( 0 ).webkitRequestFullScreen( Element.ALLOW_KEYBOARD_INPUT );
-				else if ( player.get( 0 ).requestFullscreen )
-					player.get( 0 ).requestFullscreen();
-			}
-			else
-			{
-				if ( document.mozCancelFullScreen )
-					document.mozCancelFullScreen();
-				else if ( document.webkitCancelFullScreen )
-					document.webkitCancelFullScreen( Element.ALLOW_KEYBOARD_INPUT );
-				else if ( document.exitFullscreen )
-					document.exitFullscreen();
-			}
-		} );
-		bottom.off( 'click', '.play' ).on( 'click', '.play', function( event, passed ) {
-			var keys = [ 'play', 'pause' ];
-			var played = video0.paused;
-			if ( passed === true )
-				played = !played;
-			else
-				video0[ keys[ played ? 0 : 1 ] ]();
-
-			$( this ).removeClass( 'fa-' + keys[ played ? 0 : 1 ] ).addClass( 'fa-' + keys[ played ? 1 : 0 ] );
-		} );
-		bottom.off( 'click', '.fa-backward, .fa-forward' ).on( 'click', '.fa-backward, .fa-forward', function() {
-			var tmp = video0.currentTime;
-			if ( $( this ).hasClass( 'fa-forward' ) )
-			{
-				tmp += 30;
-				if ( tmp >= video0.duration )
-				{
-					tmp = 0;
-					video0.pause();
-				}
-			}
-			else
-				tmp = ( ( ( tmp - 10 ) <= 0 ) ? 0 : ( tmp - 10 ) );
-
-			video0.currentTime = tmp;
-		} );
-		$( '.volume', bottom ).on( 'input change drag', function() { video0.volume = ( $( this ).val() / 100 ); } ).val( parseInt( video0.volume * 100 ) );
-
-		video.on( 'error', function() { console.log( 'error:', arguments ); } );
-		video.on( 'abort', function() { console.log( 'abort:', arguments ); } );
-
-		video.on( 'canplay', function() { video.fadeIn( 5000 ); setTimeout( () => { video0.play(); }, 1000 ) } );
-		video.on( 'play pause', function() { $( '.play', bottom ).trigger( 'click', [ true ] ); } );
-
-		video.on( 'loadeddata', function() { console.log( 'loadeddata:', arguments ); } );
-		video.on( 'loadedmetadata', function() { console.log( 'loadedmetadata:', arguments ); } );
-
-		//video.on( 'progress', function() { console.log( 'progress:', arguments ); } );
-		//video.on( 'timeupdate', function() { console.log( 'timeupdate:', arguments ); } );
-
-		//video.on( 'volumechange', function() { console.log( 'volumechange:', video0.volume ); } );
-		video.on( 'ratechange', function() { console.log( 'ratechange:', arguments ); } );
-		video.on( 'seeking', function() { console.log( 'seeking:', arguments ); } );
-		video.on( 'seeked', function() { console.log( 'seeked:', arguments ); } );
-
-		video.hide().attr( 'src', ( 'media/' + data.id + '/' + data.path.split( '/' ).slice( -1 ) ) );
-
-		medias.fadeOut( 'slow' );
-		player.fadeIn( 'slow' );
-	}
-
-	// Actions
-	setTimeout( () => { status( false, true ); }, 1000 );
-
-	$( window ).resize( () => {
-		var infos = medias.find( '.infos' );
-		if ( infos.length )
-		{
-			var h = medias.height();
-			var w = medias.width();
-			var r = w / h;
-
-			var tmp = ( h - 250 );
-			if ( r > 1.78 )
-			{
-				var tmp2 = w / 1.78;
-				if ( tmp2 < tmp )
-					tmp = tmp2;
-			}
-			else if ( tmp < 110 )
-				tmp = 110;
-
-			infos.find( '.banner' ).height( tmp );
-		}
-	} );
-
-	$( document )
-		.on( 'click', '.navbar .fa-angle-left', prev )
-		.on( 'click', '.navbar .fa-home', () => { emit( 'medias', { category: false, search: '' } ); } )
-		.on( 'click', '#medias .category', function() {
-			emit( 'medias', { category: $( this ).data( 'id' ), search: false } );
-		} )
-		.on( 'click', '#medias .media', function( event ) {
-			var elem = $( event.target );
-			if ( elem.hasClass( 'fa-play' ) || elem.children( '.fa-play' ).length || elem.parents( '.fa-play' ).length )
-				return ;
-
-			emit( 'infos', { category: $( this ).data( 'category' ), id: $( this ).data( 'id' ) } );
-		} )
-		.on( 'click', '#bartop i, #bartop svg', function() {
-			if ( typeof( bartop_callback ) === 'function' )
-				bartop_callback( ...arguments );
-		} )
-		.on( 'input change drag', '#bartop .zoom', function() {
-			var zoom = $( this ).val();
-			medias.attr( 'data-zoom', zoom );
-			cookie( 'zoom', zoom );
-		} )
-		.on( 'click', '#player .bottom .fa-times-circle', function() {
-			$( '.top .fa-exchange-alt', player ).trigger( 'click', [ true ] );
-
-			medias.fadeIn( 'slow' );
-			player.fadeOut( 'slow', function() { $( this ).find( 'video' ).remove(); } );
-		} );
-
-	var timeout_search = 0;
-	search.find( 'input' )
-		.keyup( function() {
-			var elem = $( this );
-			var text = elem.val();
-			var visible = !!text.length;
-
-			if ( timeout_search )
-				clearTimeout( timeout_search );
-
-			timeout_search = setTimeout( () => {
-				timeout_search = 0;
-				elem.parent().find( '.fa-times' ).toggle( visible );
-				emit( 'medias', { category: false, search: text } );
-			}, 250 );
-		} )
-		.parent().find( '.fa-times' ).click( function() {
-			$( this ).hide().parent().find( 'input' ).val( '' );
-		} );
-
-	$( '#dropdown' ).on( 'change', function( event ) {
-		var selected = event.target.selectedOptions[ 0 ].value;
-		emit( 'medias', [ selected ] );
-	} ).trigger( 'change' );
 
 	// Handlebar
 	var set_values = {};
@@ -392,4 +172,249 @@ $( function() {
 			}
 		};
 	} );
+
+	// Functions
+	function vars()
+	{
+		header = ( header.length ? header : $( '#header' ) );
+		search = ( search.length ? search : $( '#search' ) );
+		bartop = ( bartop.length ? bartop : $( '#bartop' ) );
+		medias = ( medias.length ? medias : $( '#medias' ) );
+		player = ( player.length ? player : $( '#player' ) );
+	}
+
+	function cookie( key, value )
+	{
+		if ( typeof( value ) !== 'undefined' )
+			$.cookie( key, value, { expires: 365, path: '/' } );
+
+		return ( $.cookie( key ) );
+	}
+
+	function status( connected, check )
+	{
+		if ( check && begin != connected )
+			return ;
+//		else if ( !begin && connected )
+//			emit( 'medias', { category: false, search: '' } );
+
+		begin = ( begin || connected );
+		$( '#server-status' )[ connected ? 'fadeOut' : 'fadeIn' ]();
+	}
+
+	function emit( key, value, passed )
+	{
+		socket.emit( key, value );
+		if ( !passed )
+		{
+			var tmp = emit_callback.slice( -1 );
+			if ( !tmp || JSON.stringify( [ key, value ] ) != JSON.stringify( tmp[ 0 ] ) )
+				emit_callback.push( [ key, value ] );
+		}
+
+		emit_prev = false;
+		back.toggle( emit_callback.length >= 2 );
+	}
+
+	function prev()
+	{
+		if ( emit_callback.length >= ( emit_prev ? 1 : 2 ) )
+		{
+			if ( !emit_prev )
+				emit_callback.pop();
+
+			var tmp = emit_callback.pop();
+			if ( !emit_callback.length )
+				emit_callback.push( tmp );
+
+			emit( ...tmp, true );
+		}
+
+		emit_prev = true;
+		back.toggle( emit_callback.length >= 2 );
+	}
+
+	function empty()
+	{
+		medias.html( $( '<div>' ).addClass( 'empty text-center' ).text( 'Aucun média trouvé ...' ) );
+	}
+
+	function bartop_refresh( data )
+	{
+		var zoom = medias.attr( 'data-zoom' );
+		if ( !zoom )
+			zoom = cookie( 'zoom' );
+
+		bartop.html( templates[ 'bartop' ]( data ) ).find( '.zoom' ).val( zoom || 2 ).trigger( 'change' );
+	}
+
+	function play( data )
+	{
+		var video = $( '<video>' ).attr( 'volume', 1 ).appendTo( player );
+		var video0 = video.get( 0 );
+
+		player.find( '.tpl' ).html( templates[ 'player' ]( data ) );
+		var top = $( '.top', player );
+		var bottom = $( '.bottom', player );
+
+		top.off( 'click', '.fa-exchange-alt' ).on( 'click', '.fa-exchange-alt', function( event, force ) {
+			if ( !force && ( window.screenTop || window.screenY ) )
+			{
+				if ( player.get( 0 ).mozRequestFullScreen )
+					player.get( 0 ).mozRequestFullScreen();
+				else if ( player.get( 0 ).webkitRequestFullScreen )
+					player.get( 0 ).webkitRequestFullScreen( Element.ALLOW_KEYBOARD_INPUT );
+				else if ( player.get( 0 ).requestFullscreen )
+					player.get( 0 ).requestFullscreen();
+			}
+			else
+			{
+				if ( document.mozCancelFullScreen )
+					document.mozCancelFullScreen();
+				else if ( document.webkitCancelFullScreen )
+					document.webkitCancelFullScreen( Element.ALLOW_KEYBOARD_INPUT );
+				else if ( document.exitFullscreen )
+					document.exitFullscreen();
+			}
+		} );
+		bottom.off( 'click', '.play' ).on( 'click', '.play', function( event, passed ) {
+			var keys = [ 'play', 'pause' ];
+			var played = video0.paused;
+			if ( passed === true )
+				played = !played;
+			else
+				video0[ keys[ played ? 0 : 1 ] ]();
+
+			$( this ).removeClass( 'fa-' + keys[ played ? 0 : 1 ] ).addClass( 'fa-' + keys[ played ? 1 : 0 ] );
+		} );
+		bottom.off( 'click', '.fa-backward, .fa-forward' ).on( 'click', '.fa-backward, .fa-forward', function() {
+			var tmp = video0.currentTime;
+			if ( $( this ).hasClass( 'fa-forward' ) )
+			{
+				tmp += 30;
+				if ( tmp >= video0.duration )
+				{
+					tmp = 0;
+					video0.pause();
+				}
+			}
+			else
+				tmp = ( ( ( tmp - 10 ) <= 0 ) ? 0 : ( tmp - 10 ) );
+
+			video0.currentTime = tmp;
+		} );
+		$( '.volume', bottom ).on( 'input change drag', function() { video0.volume = ( $( this ).val() / 100 ); } ).val( parseInt( video0.volume * 100 ) );
+
+		video.on( 'error', function() { console.log( 'error:', arguments ); } );
+		video.on( 'abort', function() { console.log( 'abort:', arguments ); } );
+
+		video.on( 'canplay', function() { video.fadeIn( 5000 ); setTimeout( () => { video0.play(); }, 1000 ) } );
+		video.on( 'play pause', function() { $( '.play', bottom ).trigger( 'click', [ true ] ); } );
+
+		video.on( 'loadeddata', function() { console.log( 'loadeddata:', arguments ); } );
+		video.on( 'loadedmetadata', function() { console.log( 'loadedmetadata:', arguments ); } );
+
+		//video.on( 'progress', function() { console.log( 'progress:', arguments ); } );
+		//video.on( 'timeupdate', function() { console.log( 'timeupdate:', arguments ); } );
+
+		//video.on( 'volumechange', function() { console.log( 'volumechange:', video0.volume ); } );
+		video.on( 'ratechange', function() { console.log( 'ratechange:', arguments ); } );
+		video.on( 'seeking', function() { console.log( 'seeking:', arguments ); } );
+		video.on( 'seeked', function() { console.log( 'seeked:', arguments ); } );
+
+		video.hide().attr( 'src', ( 'media/' + data.id + '/' + data.path.split( '/' ).slice( -1 ) ) );
+
+		medias.fadeOut( 'slow' );
+		player.fadeIn( 'slow' );
+	}
+
+	// Actions
+	function init()
+	{
+		setTimeout( () => { status( false, true ); }, 1000 );
+
+		$( window ).resize( () => {
+			var infos = medias.find( '.infos' );
+			if ( infos.length )
+			{
+				var h = medias.height();
+				var w = medias.width();
+				var r = w / h;
+
+				var tmp = ( h - 250 );
+				if ( r > 1.78 )
+				{
+					var tmp2 = w / 1.78;
+					if ( tmp2 < tmp )
+						tmp = tmp2;
+				}
+				else if ( tmp < 110 )
+					tmp = 110;
+
+				infos.find( '.banner' ).height( tmp );
+			}
+		} );
+
+		$( document )
+			.on( 'click', '.navbar .fa-angle-left', prev )
+			.on( 'click', '.navbar .fa-home', () => { emit( 'medias', { category: false, search: '' } ); } )
+			.on( 'click', '.langs [data-item]', function() {
+				var item = $( this ).data( 'item' );
+				if ( item in langs )
+				{
+					cookie( 'lang', item );
+					document.location.reload();
+				}
+			} )
+			.on( 'click', '#medias .category', function() {
+				emit( 'medias', { category: $( this ).data( 'id' ), search: false } );
+			} )
+			.on( 'click', '#medias .media', function( event ) {
+				var elem = $( event.target );
+				if ( elem.hasClass( 'fa-play' ) || elem.children( '.fa-play' ).length || elem.parents( '.fa-play' ).length )
+					return ;
+
+				emit( 'infos', { category: $( this ).data( 'category' ), id: $( this ).data( 'id' ) } );
+			} )
+			.on( 'click', '#bartop i, #bartop svg', function() {
+				if ( typeof( bartop_callback ) === 'function' )
+					bartop_callback( ...arguments );
+			} )
+			.on( 'input change drag', '#bartop .zoom', function() {
+				var zoom = $( this ).val();
+				medias.attr( 'data-zoom', zoom );
+				cookie( 'zoom', zoom );
+			} )
+			.on( 'click', '#player .bottom .fa-times-circle', function() {
+				$( '.top .fa-exchange-alt', player ).trigger( 'click', [ true ] );
+
+				medias.fadeIn( 'slow' );
+				player.fadeOut( 'slow', function() { $( this ).find( 'video' ).remove(); } );
+			} );
+
+		var timeout_search = 0;
+		search.find( 'input' )
+			.keyup( function() {
+				var elem = $( this );
+				var text = elem.val();
+				var visible = !!text.length;
+
+				if ( timeout_search )
+					clearTimeout( timeout_search );
+
+				timeout_search = setTimeout( () => {
+					timeout_search = 0;
+					elem.parent().find( '.fa-times' ).toggle( visible );
+					emit( 'medias', { category: false, search: text } );
+				}, 250 );
+			} )
+			.parent().find( '.fa-times' ).click( function() {
+				$( this ).hide().parent().find( 'input' ).val( '' );
+			} );
+
+		$( '#dropdown' ).on( 'change', function( event ) {
+			var selected = event.target.selectedOptions[ 0 ].value;
+			emit( 'medias', [ selected ] );
+		} ).trigger( 'change' );
+	}
 } );
